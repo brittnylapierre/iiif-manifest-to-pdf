@@ -11,8 +11,11 @@
   "author": "brittny lapierre",
   "license": "ISC",
   "dependencies": {
+    "@fastify/static": "^5.0.2",
+    "blob-stream": "^0.1.3",
     "esm": "^3.2.25",
     "fastify": "^3.29.0",
+    "get-stream": "^6.0.1",
     "image-data-uri": "^2.0.1",
     "node-fetch": "^3.2.4",
     "pdfkit": "^0.13.0",

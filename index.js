@@ -1,35 +1,65 @@
 import * as Fastify from 'fastify'
+import * as FastifyStatic from '@fastify/static'
+import fs from 'fs'
+import path from 'path'
 import Cocktail  from './cocktail.js'
+import { fileURLToPath } from 'url'
+
+import { dirname } from 'path'
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const fastify = Fastify.fastify({ logger: true })
+
+fastify.register(FastifyStatic, {
+  root: path.join(__dirname, 'static'),
+  prefix: '/static/', // optional: default '/'
+})
+
+/*
+fastify.decorateReply('sendFile', function(filename) {
+  const stream = fs.createReadStream(filename)
+  this.type('text/html').send(stream)
+})*/
+
 fastify.route({
   method: 'GET',
   url: '/',
+  handler: async (request, reply) => {
+    reply.sendFile('./index.html')
+  }
+})
+
+fastify.route({
+  method: 'POST',
+  url: '/',
   schema: {
-    // request needs to have a querystring with a `name` parameter
-    querystring: {
-      name: { type: 'string' }
-    },
-
-
-    // the response needs to be an object with an `hello` property of type 'string'
-    response: {
-      200: {
-        type: 'object',
-        properties: {
-          hello: { type: 'string' }
-        }
+    body: {
+      type: 'object',
+      required: [
+          'filename',
+          'url',
+          'canvases'
+      ],
+      properties: {
+        filename: { type: 'string' },
+        url: { type: 'string' },
+        canvases: { type: 'string' },
       }
-    }
-  },
-  // this function is executed for every request before the handler is executed
-  preHandler: async (request, reply) => {
-    // E.g. check authentication
+    },
   },
   handler: async (request, reply) => {
-    // 1, 2, 3, 6
-    await Cocktail("", [[0,2], [5]], "test")
-    return { hello: 'world' }
+    const url = request.body.url
+    const filename = request.body.filename
+    const canvases = Array.isArray(request.body.canvases) ? request.body.canvases : JSON.parse(request.body.canvases)
+
+    const stream = await Cocktail(url, canvases, filename)
+    reply.header("Access-Control-Allow-Origin", "*");
+    reply.header('Content-Disposition', `attachment; filename=${filename}.pdf`);
+    reply.header('Content-Length', stream.bytesRead);
+    reply.type('application/octet-stream');
+    reply.send(stream);
   }
 })
 

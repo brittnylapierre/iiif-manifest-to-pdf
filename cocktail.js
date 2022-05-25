@@ -1,7 +1,8 @@
+// See https://github.com/vanda/cocktail
 import fetch from 'node-fetch'
-import PDFDocument from './pdfWrap.cjs'
-import fs from 'fs';
 import imageDataURI from 'image-data-uri'
+import getStream from 'get-stream'
+import PDFDocument from './pdfWrap.cjs'
 
 function v2Extract (manifest) {
   let canvases = []
@@ -80,8 +81,7 @@ async function generatePDF (fileName, extractedCanvases) {
     top.addItem(`${fileName}/${imageData.imagePos}`);
 
     let currentURI = await imageDataURI.encodeFromURL(imageData.imageUrl);
-
-    console.log(imageData.imageUrl)
+    
     doc
     .text("Label: " + imageData.imageLabel, 0, 0)
     .moveDown()
@@ -90,12 +90,12 @@ async function generatePDF (fileName, extractedCanvases) {
     .addPage()
   }
 
-  doc.pipe(fs.createWriteStream(`${fileName}.pdf`));
-  doc.end();
+  doc.end()
+  
+  return  await getStream.buffer(doc)
 }
 
 const Cocktail = async (manifestURL, canvasPositionsArray, fileName) => { 
-  manifestURL = "https://www-demo.canadiana.ca/iiif/oocihm.65600/manifest";
   //"https://wellcomelibrary.org/iiif/b18035723/manifest";
   // https://iiif.wellcomecollection.org/presentation/v3/b18035723
 
@@ -113,7 +113,8 @@ const Cocktail = async (manifestURL, canvasPositionsArray, fileName) => {
 
   if(canvases.length) {
    let extractedCanvases = extractCanvases(canvases, canvasPositionsArray);
-   await generatePDF(fileName, extractedCanvases)
+   
+   return await generatePDF(fileName, extractedCanvases)
   } else throw "No canvases to export"
 }
 
