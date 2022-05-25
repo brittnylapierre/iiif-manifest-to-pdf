@@ -23,11 +23,16 @@ function v3Extract (manifest) {
   let canvases = []
   let index = 0;
   for( const item of manifest['items'] ) {
-    let imageLabel = item['label']['@none'][0]
+    let imageLabel = ""
+
+    if(item.hasOwnProperty('label') && item['label'].hasOwnProperty('none') && Array.isArray(item['label']['none'])) imageLabel = item['label']['none'][0]
+
     for( const itemDepth2 of item['items'] ) {
       for( const itemDepth3 of itemDepth2['items'] ) {
-       let imageUrl = itemDepth3['body']['id']
-       canvases.push({imageUrl, imageLabel, imagePos: index + 1})
+       if(itemDepth3.hasOwnProperty('body') && itemDepth3['body'].hasOwnProperty('id')) {
+        let imageUrl = itemDepth3['body']['id']
+        canvases.push({imageUrl, imageLabel, imagePos: index + 1})
+       }
       }
     }
     index++;
@@ -90,7 +95,8 @@ async function generatePDF (fileName, extractedCanvases) {
 }
 
 const Cocktail = async (manifestURL, canvasPositionsArray, fileName) => { 
-  manifestURL = "https://wellcomelibrary.org/iiif/b18035723/manifest";
+  manifestURL = "https://www-demo.canadiana.ca/iiif/oocihm.65600/manifest";
+  //"https://wellcomelibrary.org/iiif/b18035723/manifest";
   // https://iiif.wellcomecollection.org/presentation/v3/b18035723
 
   const settings = { method: "Get" }
