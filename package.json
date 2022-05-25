@@ -1,0 +1,21 @@
+{
+  "name": "iiif-manifest-to-pdf",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "an api that will convert an iiif manifest to a pdf",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "brittny lapierre",
+  "license": "ISC",
+  "dependencies": {
+    "esm": "^3.2.25",
+    "fastify": "^3.29.0",
+    "image-data-uri": "^2.0.1",
+    "node-fetch": "^3.2.4",
+    "pdfkit": "^0.13.0",
+    "pdfmake": "^0.2.5"
+  }
+}
