@@ -16,9 +16,9 @@ Supports both IIIF v2 and v3 manifests.
 `npm run start`
 
 A page that lets you enter a file name, manifest url, and multi-dimensional array of canvas ranges will show up.
-
-Filename example: my-manifest
-Manifest url example: https://www-demo.canadiana.ca/iiif/oocihm.65600/manifest
-Canvases example: [[0,5],[10]] (This will take pages 1-5, and 10 from your manifest and add them to your pdf.)
+|-------------------|-------------------------------------------------------------------------------------------|
+| Filename example: | my-manifest |
+| Manifest url example: | https://www-demo.canadiana.ca/iiif/oocihm.65600/manifest |
+| Canvases example: [[0,5],[10]] (This will take pages 1-5, and 10 from your manifest and add them to your pdf.) |
 
 A pdf will automatically download after the server gets the manifest json and compiles the pdf with the canvas images.
