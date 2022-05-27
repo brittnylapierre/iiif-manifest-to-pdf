@@ -1,9 +1,8 @@
-// See https://github.com/vanda/cocktail
 import fetch from 'node-fetch'
-import imageDataURI from 'image-data-uri'
 import getStream from 'get-stream'
 import PDFDocument from './pdfWrap.cjs'
 
+// See https://github.com/vanda/cocktail
 function v2Extract (manifest) {
   let canvases = []
   for( const sequence of manifest['sequences'] ) {
@@ -14,7 +13,7 @@ function v2Extract (manifest) {
         let imageUrl = image['resource']['@id']
         canvases.push({imageUrl, imageLabel, imagePos : index + 1 })
       }
-      index++;
+      index++
     }
   }
   return canvases
@@ -36,7 +35,7 @@ function v3Extract (manifest) {
        }
       }
     }
-    index++;
+    index++
    }
   return canvases
 }
@@ -45,10 +44,10 @@ function getManifestVersion (manifest) {
   // V3 returns an array V2 is just a string
   let versionUrl = manifest['@context']
   if(Array.isArray(versionUrl)) versionUrl = versionUrl[1] 
-  const match = versionUrl.match(/\/presentation\/([0-9]+)\//);
-  let version = 0;
+  const match = versionUrl.match(/\/presentation\/([0-9]+)\//)
+  let version = 0
   if (match) {
-      version = match[1];
+      version = match[1]
   }
   return version
 }
@@ -58,7 +57,7 @@ function extractCanvases(canvases, canvasPositionsArray) {
   let extractedCanvases = [];
   for( const subArray of canvasPositionsArray) {
     if(subArray.length === 2) {
-      extractedCanvases = extractedCanvases.concat(canvases.slice(subArray[0], subArray[1] + 1)) // non inclusive so +1
+      extractedCanvases = extractedCanvases.concat(canvases.slice(subArray[0], subArray[1] + 1)) // non inclusive so + 1
     } else if (subArray.length === 1) {
       extractedCanvases.push(canvases[subArray[0]])
     }
@@ -67,27 +66,37 @@ function extractCanvases(canvases, canvasPositionsArray) {
 }
 
 async function generatePDF (fileName, extractedCanvases) {
-
   let doc = new PDFDocument
 
+  doc
+  .text("Manifest: " + fileName, 0, 0)
+
   // Get a reference to the Outline root
-  const { outline } = doc;
+  const { outline } = doc
 
   // Add a top-level bookmark
-  const top = outline.addItem(fileName);
+  const top = outline.addItem(fileName)
 
+  let index = 0
   for( const imageData of extractedCanvases) {
-    // Add a sub-section
-    top.addItem(`${fileName}/${imageData.imagePos}`);
+    doc.addPage()
+    top.addItem(`${fileName}/${imageData.imagePos}`)
+    try {
+      const settings = { method: "Get", timeout: 8000000 }
+      const response = await fetch(imageData.imageUrl, settings)
+      const currentBuffer = Buffer.from(await response.arrayBuffer())
+      const currentURI = `data:image/jpeg;base64,${currentBuffer.toString("base64")}`
+      doc
+      .text("Label: " + imageData.imageLabel, 0, 0)
+      .image(currentURI, 0, 15, {width: 500})
+    } catch (e) {
+      console.log("Error on: ", imageData)
+      console.log(e)
+      doc
+      .text("Label: " + imageData.imageLabel + " Error could not grab image data.", 0, 0)
+    }
 
-    let currentURI = await imageDataURI.encodeFromURL(imageData.imageUrl);
-    
-    doc
-    .text("Label: " + imageData.imageLabel, 0, 0)
-    .moveDown()
-    .image(currentURI, 0, 15, {width: 500})
-    .moveDown()
-    .addPage()
+    index++
   }
 
   doc.end()
@@ -106,14 +115,13 @@ const Cocktail = async (manifestURL, canvasPositionsArray, fileName) => {
   const version = getManifestVersion(manifest)
   let canvases = []
   if(version === "2") {
-    canvases = v2Extract(manifest);
+    canvases = v2Extract(manifest)
   } else if (version === "3" ) {
-    canvases = v3Extract(manifest);
+    canvases = v3Extract(manifest)
   }
 
   if(canvases.length) {
-   let extractedCanvases = extractCanvases(canvases, canvasPositionsArray);
-   
+   let extractedCanvases = extractCanvases(canvases, canvasPositionsArray)
    return await generatePDF(fileName, extractedCanvases)
   } else throw "No canvases to export"
 }

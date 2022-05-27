@@ -17,6 +17,13 @@ fastify.register(FastifyStatic, {
   prefix: '/static/', // optional: default '/'
 })
 
+// second plugin
+fastify.register(FastifyStatic, {
+  root: path.join(__dirname, 'node_modules'),
+  prefix: '/scripts/',
+  decorateReply: false // the reply decorator has been added by the first plugin registration
+})
+
 /*
 fastify.decorateReply('sendFile', function(filename) {
   const stream = fs.createReadStream(filename)

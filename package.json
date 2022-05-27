@@ -6,6 +6,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "copy": "npm run copy-uv-dist-umd && npm run copy-uv-html && npm run copy-uv-css",
+    "copy-uv-dist-umd": "cp -R node_modules/universalviewer/dist/umd ./static/uv",
+    "copy-uv-html": "cp -R node_modules/universalviewer/dist/uv.html ./static/uv",
+    "copy-uv-css": "cp -R node_modules/universalviewer/dist/uv.css ./static/uv",
+    "postinstall": "npm run copy",
     "start": "node index.js"
   },
   "author": "brittny lapierre",
@@ -16,9 +21,9 @@
     "esm": "^3.2.25",
     "fastify": "^3.29.0",
     "get-stream": "^6.0.1",
-    "image-data-uri": "^2.0.1",
     "node-fetch": "^3.2.4",
     "pdfkit": "^0.13.0",
-    "pdfmake": "^0.2.5"
+    "pdfmake": "^0.2.5",
+    "universalviewer": "^4.0.0-pre.108"
   }
 }

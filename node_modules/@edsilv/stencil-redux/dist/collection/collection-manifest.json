@@ -1,0 +1,11 @@
+{
+  "components": [],
+  "collections": [],
+  "compiler": {
+    "name": "@stencil/core",
+    "version": "0.18.1",
+    "typescriptVersion": "3.3.3"
+  },
+  "bundles": [],
+  "global": "global/store.js"
+}

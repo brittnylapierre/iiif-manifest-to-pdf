@@ -1,0 +1,1 @@
+module.exports = require('../cjs/es5/stencilredux.define.js');

@@ -1,0 +1,4 @@
+export declare class ILabelValuePair {
+    label: string | null;
+    value: string | null;
+}
