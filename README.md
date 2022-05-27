@@ -4,6 +4,9 @@ A simple demo of a node.js api for downloading a manifest to pdf. Logic from htt
 You specify which canvases to add to your pdf through a multi-dimensional array of canvas ranges.
 
 Supports both IIIF v2 and v3 manifests.
+![Screenshot from 2022-05-27 16-06-37](https://user-images.githubusercontent.com/10541019/170782970-f18262dc-2e9d-40b6-8759-99ba4fd704ab.png)
+
+
 
 # Getting started
 
