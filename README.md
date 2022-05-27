@@ -1,5 +1,7 @@
 # iiif-manifest-to-pdf
-A simple demo of a node.js api for downloading a manifest to pdf. [Logic from vanda/cocktail](https://github.com/vanda/cocktail)
+A simple demo of a node.js api for downloading a manifest to pdf. 
+
+[Logic from vanda/cocktail](https://github.com/vanda/cocktail).
 
 You specify which canvases to add to your pdf through a list of canvas ranges.
 
