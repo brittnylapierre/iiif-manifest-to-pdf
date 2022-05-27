@@ -68,8 +68,6 @@
         for(let pageNumber of pageRangeArray) indexRangeArray.push(parseInt(pageNumber)-1)
         rangesArray.push(indexRangeArray)
       }
-      console.log(rangesArray)
-
       return rangesArray
     }
 
@@ -157,6 +155,15 @@
         embedded: true // needed for codesandbox frame
       }
       uv = UV.init("uv", data)
+
+      // override config using an inline json object
+      uv.on("configure", function ({ config, cb }) {
+        cb({
+          options: { 
+            useArrowKeysToNavigate: true 
+          }
+        });
+      });
     }
   });
 
