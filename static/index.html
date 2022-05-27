@@ -160,8 +160,9 @@
       uv.on("configure", function ({ config, cb }) {
         cb({
           options: { 
-            useArrowKeysToNavigate: true 
-          }
+            useArrowKeysToNavigate: true,
+            preserveViewport: true,
+          }, 
         });
       });
     }
