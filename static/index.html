@@ -127,6 +127,16 @@
   };
 
   uv = UV.init("uv", data);
+
+  document
+  .getElementById("url")
+  .addEventListener('input', e => { 
+    uv.set({
+      iiifManifestId: e.target.value,
+      canvasIndex: 0,
+    });
+  });
+
   /*var urlAdaptor = new UV.IIIFURLAdaptor();
 
   const data = urlAdaptor.getInitialData({
