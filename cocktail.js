@@ -16,7 +16,16 @@ function v2Extract (manifest) {
       index++
     }
   }
-  return canvases
+
+  const id = manifest["@id"]
+  const label = manifest["label"]
+
+  return { 
+    id,
+    label,
+    provider : "Information not Available",
+    canvases 
+  }
 }
 
 function v3Extract (manifest) {
@@ -36,8 +45,33 @@ function v3Extract (manifest) {
       }
     }
     index++
-   }
-  return canvases
+  }
+
+  const id = manifest["id"]
+  const label = manifest["label"]["none"].toString()
+  let provider = "Information not Available"
+  
+  if( manifest.hasOwnProperty("provider") && 
+      Array.isArray(manifest["provider"]) ) { 
+    let labels = "";
+    for( let providerObj of manifest["provider"] ) {
+      if( providerObj.hasOwnProperty("label") ) {
+        let labelArray = []
+        for ( let langKey in providerObj["label"] ) {
+          labelArray.push(providerObj["label"][langKey].join(", "))
+        } 
+        labels += labelArray.join(", ") + " "
+      }
+    }
+    if(labels.length) provider = labels + " "
+  }
+
+  return { 
+    id,
+    label,
+    provider,
+    canvases 
+  }
 }
 
 function getManifestVersion (manifest) {
@@ -65,11 +99,14 @@ function extractCanvases(canvases, canvasPositionsArray) {
   return extractedCanvases
 }
 
-async function generatePDF (fileName, extractedCanvases) {
+async function generatePDF (id, label, provider, fileName, extractedCanvases) {
   let doc = new PDFDocument
 
   doc
-  .text("Manifest: " + fileName, 0, 0)
+  .text("Manifest Information")
+  .text("Id: " + id)
+  .text("Label: " + label)
+  .text("Provider: " + provider)
 
   // Get a reference to the Outline root
   const { outline } = doc
@@ -77,7 +114,6 @@ async function generatePDF (fileName, extractedCanvases) {
   // Add a top-level bookmark
   const top = outline.addItem(fileName)
 
-  let index = 0
   for( const imageData of extractedCanvases) {
     doc.addPage()
     top.addItem(`${fileName}/${imageData.imagePos}`)
@@ -87,16 +123,14 @@ async function generatePDF (fileName, extractedCanvases) {
       const currentBuffer = Buffer.from(await response.arrayBuffer())
       const currentURI = `data:image/jpeg;base64,${currentBuffer.toString("base64")}`
       doc
-      .text("Label: " + imageData.imageLabel, 0, 0)
-      .image(currentURI, 0, 15, {width: 500})
+      .text("Label: " + imageData.imageLabel, 15,15)
+      .image(currentURI, 15, 30, {width: 500})
     } catch (e) {
       console.log("Error on: ", imageData)
       console.log(e)
       doc
-      .text("Label: " + imageData.imageLabel + " Error could not grab image data.", 0, 0)
+      .text("Label: " + imageData.imageLabel + " Error could not grab image data.", 15, 15)
     }
-
-    index++
   }
 
   doc.end()
@@ -113,16 +147,16 @@ const Cocktail = async (manifestURL, canvasPositionsArray, fileName) => {
   const manifest = await res.json()
   
   const version = getManifestVersion(manifest)
-  let canvases = []
+  let info = {}
   if(version === "2") {
-    canvases = v2Extract(manifest)
+    info = v2Extract(manifest)
   } else if (version === "3" ) {
-    canvases = v3Extract(manifest)
+    info = v3Extract(manifest)
   }
 
-  if(canvases.length) {
-   let extractedCanvases = extractCanvases(canvases, canvasPositionsArray)
-   return await generatePDF(fileName, extractedCanvases)
+  if(info["canvases"].length) {
+   let extractedCanvases = extractCanvases(info["canvases"], canvasPositionsArray)
+   return await generatePDF(info["id"], info["label"], info["provider"], fileName, extractedCanvases)
   } else throw "No canvases to export"
 }
 
