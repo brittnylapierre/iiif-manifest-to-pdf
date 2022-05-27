@@ -50,6 +50,28 @@
   <link rel="stylesheet" type="text/css" href="/static/uv/uv.css" />
   <script type="text/javascript" src="/static/uv/umd/UV.js"></script>
   <script>
+
+    function create2DArray(rangesString) {
+      // 1-10, 15 -> [[0,9],[14]]
+
+      // Remove whitespace
+      rangesString = rangesString.replace(/^\s+|\s+$/gm,'')
+
+      // Extract ranges
+      const rangeStringArray = rangesString.split(',')
+
+      let rangesArray = []
+      for (let rangeString of rangeStringArray) {
+        const pageRangeArray = rangeString.split("-")
+        let indexRangeArray = []
+        for(let pageNumber of pageRangeArray) indexRangeArray.push(parseInt(pageNumber)-1)
+        rangesArray.push(indexRangeArray)
+      }
+      console.log(rangesArray)
+
+      return rangesArray
+    }
+
     function test() {
 
       var submitButton = document.getElementById("submit")
@@ -59,7 +81,7 @@
       const data = {
         filename: document.getElementById("filename").value,
         url: document.getElementById("url").value,
-        canvases: document.getElementById("canvases").value,
+        canvases: JSON.stringify(create2DArray(document.getElementById("canvases").value)),
       }
 
       // Default options are marked with *
@@ -103,8 +125,8 @@
         <br/>
         <input type="text" name="filename" id="filename" placeholder="PDF file name" required value="test" />
         <br/>
-        <input type="text" name="canvases" id="canvases" placeholder="Canvases ex: [[0,10],[15]]" required
-          value="[[0,100],[101,150]]" />
+        <input type="text" name="canvases" id="canvases" placeholder="Canvases ex: 1-10, 15" required
+          value="1-10, 15" />
         <br/>
         <hr>
         <div class="btn-block">
