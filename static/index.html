@@ -163,11 +163,17 @@
             useArrowKeysToNavigate: true,
             preserveViewport: true,
           }, 
-        });
-      });
+          modules: {
+            downloadDialogue: {
+              options: {
+                optionsExplanatoryTextEnabled: true,
+              }
+            }
+          }
+        })
+      })
     }
-  });
-
+  })
   /*var urlAdaptor = new UV.IIIFURLAdaptor();
 
   const data = urlAdaptor.getInitialData({
