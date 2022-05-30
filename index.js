@@ -12,6 +12,8 @@ const __dirname = dirname(__filename);
 
 const fastify = Fastify.fastify({ logger: true })
 
+const PORT = process.env.PORT || 8080
+
 fastify.register(FastifyStatic, {
   root: path.join(__dirname, 'static'),
   prefix: '/static/', // optional: default '/'
@@ -72,7 +74,7 @@ fastify.route({
 
 const start = async () => {
   try {
-    await fastify.listen(8080)
+    await fastify.listen(PORT)
   } catch (err) {
     fastify.log.error(err)
     process.exit(1)
