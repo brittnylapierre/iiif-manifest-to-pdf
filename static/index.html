@@ -52,11 +52,13 @@
   <script type="text/javascript" src="/static/uv/umd/UV.js"></script>
   <script>
 
+    const DOWNLOAD_DELAY = 5000;
+
     function create2DArray(rangesString) {
       // 1-10, 15 -> [[0,9],[14]]
 
       // Remove whitespace
-      rangesString = rangesString.replace(/^\s+|\s+$/gm,'')
+      rangesString = rangesString.replace(/^\s+|\s+$/gm, '')
 
       // Extract ranges
       const rangeStringArray = rangesString.split(',')
@@ -65,19 +67,47 @@
       for (let rangeString of rangeStringArray) {
         const pageRangeArray = rangeString.split("-")
         let indexRangeArray = []
-        for(let pageNumber of pageRangeArray) indexRangeArray.push(parseInt(pageNumber)-1)
+        for (let pageNumber of pageRangeArray) indexRangeArray.push(parseInt(pageNumber) - 1)
         rangesArray.push(indexRangeArray)
       }
       return rangesArray
     }
 
-    function test() {
+    function downloadFile(filename, filenameHash, submitButton) {
+      let timer = setTimeout(function () {
+        try {
+          fetch(`/file/${filenameHash}`)
+            .then(response => response.blob())
+            .then(blob => {
+              clearTimeout(timer)
+              var url = URL.createObjectURL(blob)
+
+              var a = document.createElement('a')
+              a.href = url
+              a.download = `${filename}.pdf`
+              document.body.appendChild(a) // we need to append the element to the dom -> otherwise it will not work in firefox
+              a.click()
+              a.remove()  //afterwards we remove the element again
+              submitButton.disabled = false
+              submitButton.innerHTML = "Generate PDF"
+            })
+            .catch(error => {
+              //element.parentElement.innerHTML = `Error: ${error}`
+              console.error('There was an error!', error);
+            })
+        } catch (e) {
+          console.error('There was an error!', error);
+        }
+      }, DOWNLOAD_DELAY)
+    }
+
+    function exportCanvases() {
 
       var submitButton = document.getElementById("submit")
       submitButton.disabled = true
       submitButton.innerHTML = "Please wait..."
 
-      const data = {
+      const requestData = {
         filename: document.getElementById("filename").value,
         url: document.getElementById("url").value,
         canvases: JSON.stringify(create2DArray(document.getElementById("canvases").value)),
@@ -90,20 +120,13 @@
           'Content-Type': 'application/json' // must be json
         },
         redirect: 'follow',
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestData),
         timeout: 8000000
       })
-        .then(response => response.blob())
-        .then(blob => {
-          var url = URL.createObjectURL(blob);
-          var a = document.createElement('a');
-          a.href = url;
-          a.download = `${data.filename}.pdf`;
-          document.body.appendChild(a); // we need to append the element to the dom -> otherwise it will not work in firefox
-          a.click();
-          a.remove();  //afterwards we remove the element again
-          submitButton.disabled = false
-          submitButton.innerHTML = "Generate PDF"
+        .then(response => response.json())
+        .then(responseData => {
+          console.log(responseData.hashFilename)
+          downloadFile(requestData.filename, responseData.hashFilename, submitButton)
         });
 
     }
@@ -119,18 +142,18 @@
       <h3 class="form-title">Manifest to PDF</h3>
       <div>
         <hr>
-        <input type="text" name="url" id="url" placeholder="Manifest url" required/>
+        <input type="text" name="url" id="url" placeholder="Manifest url" required />
         <!--value="https://www-demo.canadiana.ca/iiif/oocihm.84484/manifest" /-->
-        <br/>
-        <input type="text" name="filename" id="filename" placeholder="PDF file name" required/> 
+        <br />
+        <input type="text" name="filename" id="filename" placeholder="PDF file name" required />
         <!--value="oocihm.84484" /-->
-        <br/>
-        <input type="text" name="canvases" id="canvases" placeholder="Canvases ex: 1-10, 15" required/>
+        <br />
+        <input type="text" name="canvases" id="canvases" placeholder="Canvases ex: 1-10, 15" required />
         <!--value="1-10, 15" /-->
-        <br/>
+        <br />
         <hr>
         <div class="btn-block">
-          <button class="form-button" id="submit" onclick="test()">Generate PDF</button>
+          <button class="form-button" id="submit" onclick="exportCanvases()">Generate PDF</button>
         </div>
       </div>
     </div>
@@ -142,38 +165,38 @@
 <script>
   let uv = undefined
   document
-  .getElementById("url")
-  .addEventListener('input', e => { 
-    if(uv !== undefined) {
-      uv.set({
-        iiifManifestId: e.target.value,
-        canvasIndex: 0,
-      })
-    } else {
-      const data = {
-        manifest: e.target.value,
-        embedded: true // needed for codesandbox frame
-      }
-      uv = UV.init("uv", data)
+    .getElementById("url")
+    .addEventListener('input', e => {
+      if (uv !== undefined) {
+        uv.set({
+          iiifManifestId: e.target.value,
+          canvasIndex: 0,
+        })
+      } else {
+        const data = {
+          manifest: e.target.value,
+          embedded: true // needed for codesandbox frame
+        }
+        uv = UV.init("uv", data)
 
-      // override config using an inline json object
-      uv.on("configure", function ({ config, cb }) {
-        cb({
-          options: { 
-            useArrowKeysToNavigate: true,
-            preserveViewport: true,
-          }, 
-          modules: {
-            downloadDialogue: {
-              options: {
-                optionsExplanatoryTextEnabled: true,
+        // override config using an inline json object
+        uv.on("configure", function ({ config, cb }) {
+          cb({
+            options: {
+              useArrowKeysToNavigate: true,
+              preserveViewport: true,
+            },
+            modules: {
+              downloadDialogue: {
+                options: {
+                  optionsExplanatoryTextEnabled: true,
+                }
               }
             }
-          }
+          })
         })
-      })
-    }
-  })
+      }
+    })
   /*var urlAdaptor = new UV.IIIFURLAdaptor();
 
   const data = urlAdaptor.getInitialData({

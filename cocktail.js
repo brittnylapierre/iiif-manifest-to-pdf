@@ -135,7 +135,8 @@ async function generatePDF (id, label, provider, fileName, extractedCanvases) {
 
   doc.end()
   
-  return  await getStream.buffer(doc)
+  return doc
+  //return  await getStream.buffer(doc)
 }
 
 const Cocktail = async (manifestURL, canvasPositionsArray, fileName) => { 
