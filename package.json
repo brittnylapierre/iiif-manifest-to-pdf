@@ -21,6 +21,7 @@
     "esm": "^3.2.25",
     "fastify": "^3.29.0",
     "get-stream": "^6.0.1",
+    "hash-generator": "^0.1.0",
     "node-fetch": "^3.2.4",
     "pdfkit": "^0.13.0",
     "pdfmake": "^0.2.5",

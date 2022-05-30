@@ -1,30 +1,29 @@
-import * as Fastify from 'fastify'
-import * as FastifyStatic from '@fastify/static'
-import fs from 'fs'
-import path from 'path'
-import Cocktail  from './cocktail.js'
-import { fileURLToPath } from 'url'
-
-import { dirname } from 'path'
+import * as Fastify from "fastify";
+import * as FastifyStatic from "@fastify/static";
+import createHash from "hash-generator";
+import fs from "fs";
+import path from "path";
+import Cocktail from "./cocktail.js";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const fastify = Fastify.fastify({ logger: true })
+const fastify = Fastify.fastify({ logger: true });
 
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 5000;
 
 fastify.register(FastifyStatic, {
-  root: path.join(__dirname, 'static'),
-  prefix: '/static/', // optional: default '/'
-})
+  root: path.join(__dirname, "static"),
+  prefix: "/static/", // optional: default '/'
+});
 
-// second plugin
 fastify.register(FastifyStatic, {
-  root: path.join(__dirname, 'node_modules'),
-  prefix: '/scripts/',
-  decorateReply: false // the reply decorator has been added by the first plugin registration
-})
+  root: path.join(__dirname, "node_modules"),
+  prefix: "/scripts/",
+  decorateReply: false, // the reply decorator has been added by the first plugin registration
+});
 
 /*
 fastify.decorateReply('sendFile', function(filename) {
@@ -33,51 +32,76 @@ fastify.decorateReply('sendFile', function(filename) {
 })*/
 
 fastify.route({
-  method: 'GET',
-  url: '/',
+  method: "GET",
+  url: "/",
   handler: async (request, reply) => {
-    reply.sendFile('./index.html')
-  }
-})
+    reply.sendFile("./index.html");
+  },
+});
 
 fastify.route({
-  method: 'POST',
-  url: '/',
+  method: "POST",
+  url: "/",
   schema: {
     body: {
-      type: 'object',
-      required: [
-          'filename',
-          'url',
-          'canvases'
-      ],
+      type: "object",
+      required: ["filename", "url", "canvases"],
       properties: {
-        filename: { type: 'string' },
-        url: { type: 'string' },
-        canvases: { type: 'string' },
-      }
+        filename: { type: "string" },
+        url: { type: "string" },
+        canvases: { type: "string" },
+      },
     },
   },
   handler: async (request, reply) => {
-    const url = request.body.url
-    const filename = request.body.filename
-    const canvases = Array.isArray(request.body.canvases) ? request.body.canvases : JSON.parse(request.body.canvases)
+    const url = request.body.url;
+    const filename = request.body.filename;
+    const canvases = Array.isArray(request.body.canvases)
+      ? request.body.canvases
+      : JSON.parse(request.body.canvases);
 
-    const stream = await Cocktail(url, canvases, filename)
-    reply.header("Access-Control-Allow-Origin", "*");
-    reply.header('Content-Disposition', `attachment; filename=${filename}.pdf`);
-    reply.header('Content-Length', stream.bytesRead);
-    reply.type('application/octet-stream');
-    reply.send(stream);
-  }
-})
+    const hash = createHash(16);
+    const hashFilename = `${hash}${filename}.pdf`;
+
+    Cocktail(url, canvases, filename).then((doc) => {
+      console.log("Done request for file: ", hashFilename);
+      doc.pipe(
+        fs.createWriteStream(path.join(__dirname, `static/${hashFilename}`))
+      );
+    });
+
+    reply.send({hashFilename});
+  },
+});
+
+fastify.route({
+  method: "GET",
+  url: "/file/:hashFilename",
+  handler: async (request, reply) => {
+    const hashFilename = request.params.hashFilename
+    reply.sendFile(`./${hashFilename}`)
+  },
+  onResponse: (request, reply, done) => {
+    if (reply.statusCode === 200) {
+      console.log(request.params)
+      const hashFilename = path.join(__dirname, `static/${request.params.hashFilename}`)
+      fs.unlink(hashFilename, (err) => {
+        if (err) console.log(err);
+        else {
+          console.log("Deleted file: ", hashFilename);
+        }
+      });
+    }
+    done();
+  },
+});
 
 const start = async () => {
   try {
-    await fastify.listen(PORT)
+    await fastify.listen(PORT, "0.0.0.0");
   } catch (err) {
-    fastify.log.error(err)
-    process.exit(1)
+    fastify.log.error(err);
+    process.exit(1);
   }
-}
-start()
+};
+start();
