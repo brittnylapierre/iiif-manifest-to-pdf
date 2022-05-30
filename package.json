@@ -5,7 +5,7 @@
   "description": "an api that will convert an iiif manifest to a pdf",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"todo",
+    "test": "echo \"todo\"",
     "copy": "npm run copy-uv-dist-umd && npm run copy-uv-html && npm run copy-uv-css",
     "copy-uv-dist-umd": "cp -R node_modules/universalviewer/dist/umd ./static/uv",
     "copy-uv-html": "cp -R node_modules/universalviewer/dist/uv.html ./static/uv",
