@@ -74,14 +74,20 @@
     }
 
     function downloadFile(filename, filenameHash, submitButton) {
-      let timer = setTimeout(function () {
-        try {
-          fetch(`/file/${filenameHash}`)
-            .then(response => response.blob())
-            .then(blob => {
-              clearTimeout(timer)
-              var url = URL.createObjectURL(blob)
+      let fileURL = URL
+      let timer = setInterval(() => {
 
+        fetch(`/file/${filenameHash}`)
+          .then(response => {
+            if (response.ok) {
+              return response.blob()
+            } return new Promise((resolve, reject) => { resolve(null) })
+          }
+          )
+          .then(blob => {
+            if (blob) {
+              clearInterval(timer)
+              var url = fileURL.createObjectURL(blob)
               var a = document.createElement('a')
               a.href = url
               a.download = `${filename}.pdf`
@@ -90,14 +96,11 @@
               a.remove()  //afterwards we remove the element again
               submitButton.disabled = false
               submitButton.innerHTML = "Generate PDF"
-            })
-            .catch(error => {
-              //element.parentElement.innerHTML = `Error: ${error}`
-              console.error('There was an error!', error);
-            })
-        } catch (e) {
-          console.error('There was an error!', error);
-        }
+            }
+          })
+          .catch(error => {
+            console.error('There was an error!', error);
+          })
       }, DOWNLOAD_DELAY)
     }
 
@@ -125,7 +128,6 @@
       })
         .then(response => response.json())
         .then(responseData => {
-          console.log(responseData.hashFilename)
           downloadFile(requestData.filename, responseData.hashFilename, submitButton)
         });
 
