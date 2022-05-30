@@ -12,7 +12,7 @@ const __dirname = dirname(__filename);
 
 const fastify = Fastify.fastify({ logger: true })
 
-const PORT = process.env.PORT || 8080
+const PORT = process.env.PORT || 5000
 
 fastify.register(FastifyStatic, {
   root: path.join(__dirname, 'static'),
