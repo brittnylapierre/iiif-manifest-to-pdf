@@ -83,7 +83,6 @@ fastify.route({
   },
   onResponse: (request, reply, done) => {
     if (reply.statusCode === 200) {
-      console.log(request.params)
       const hashFilename = path.join(__dirname, `static/${request.params.hashFilename}`)
       fs.unlink(hashFilename, (err) => {
         if (err) console.log(err);
