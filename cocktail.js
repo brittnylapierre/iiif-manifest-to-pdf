@@ -1,12 +1,18 @@
 import fetch from 'node-fetch'
-import getStream from 'get-stream'
 import PDFDocument from './pdfWrap.cjs'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 // See https://github.com/vanda/cocktail
 function v2Extract (manifest) {
   let canvases = []
   for( const sequence of manifest['sequences'] ) {
-    let index = 0;
+    let index = 0
     for( const canvas of sequence['canvases'] ) {
       let imageLabel = canvas['label']['@value'] ? canvas['label']['@value'] : canvas['label']
       for(const image of canvas['images'] ) {
@@ -30,7 +36,7 @@ function v2Extract (manifest) {
 
 function v3Extract (manifest) {
   let canvases = []
-  let index = 0;
+  let index = 0
   for( const item of manifest['items'] ) {
     let imageLabel = ""
 
@@ -53,7 +59,7 @@ function v3Extract (manifest) {
   
   if( manifest.hasOwnProperty("provider") && 
       Array.isArray(manifest["provider"]) ) { 
-    let labels = "";
+    let labels = ""
     for( let providerObj of manifest["provider"] ) {
       if( providerObj.hasOwnProperty("label") ) {
         let labelArray = []
@@ -88,7 +94,7 @@ function getManifestVersion (manifest) {
 
 // [ [start, end], [start], [start, end] ]
 function extractCanvases(canvases, canvasPositionsArray) {
-  let extractedCanvases = [];
+  let extractedCanvases = []
   for( const subArray of canvasPositionsArray) {
     if(subArray.length === 2) {
       extractedCanvases = extractedCanvases.concat(canvases.slice(subArray[0], subArray[1] + 1)) // non inclusive so + 1
@@ -121,12 +127,19 @@ async function generatePDF (id, label, provider, fileName, extractedCanvases) {
       const settings = { method: "Get", timeout: 8000000 }
       const response = await fetch(imageData.imageUrl, settings)
       const currentBuffer = Buffer.from(await response.arrayBuffer())
-      const currentURI = `data:image/jpeg;base64,${currentBuffer.toString("base64")}`
+
+      const tempFile = path.join(__dirname, `image-${imageData.imagePos}.jpg`)
+
+      fs.writeFileSync(tempFile, currentBuffer)
+
       doc
       .text("Label: " + imageData.imageLabel, 15,15)
-      .image(currentURI, 15, 30, {width: 500})
+      .image(tempFile, 15, 30, {width: 500})
+
+      fs.unlinkSync( tempFile )
+
+
     } catch (e) {
-      console.log("Error on: ", imageData)
       console.log(e)
       doc
       .text("Label: " + imageData.imageLabel + " Error could not grab image data.", 15, 15)
@@ -140,7 +153,7 @@ async function generatePDF (id, label, provider, fileName, extractedCanvases) {
 }
 
 const Cocktail = async (manifestURL, canvasPositionsArray, fileName) => { 
-  //"https://wellcomelibrary.org/iiif/b18035723/manifest";
+  //"https://wellcomelibrary.org/iiif/b18035723/manifest"
   // https://iiif.wellcomecollection.org/presentation/v3/b18035723
 
   const settings = { method: "Get" }
@@ -161,4 +174,4 @@ const Cocktail = async (manifestURL, canvasPositionsArray, fileName) => {
   } else throw "No canvases to export"
 }
 
-export default Cocktail;
+export default Cocktail
