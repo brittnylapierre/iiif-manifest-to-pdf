@@ -125,7 +125,7 @@ const start = async () => {
 }
 start()
 
-/*
+
 // Handling app out-of-memory errors
 function exitHandler(code) {
   console.log('About to exit with code:', code)
@@ -133,7 +133,6 @@ function exitHandler(code) {
     connection.socket.send("There was a problem with the server.");
     //Please try generating a smaller file.
   }
-  process.exit(code)
 }
 
 //do something when app is closing
@@ -147,4 +146,4 @@ process.on('SIGUSR1', exitHandler);
 process.on('SIGUSR2', exitHandler);
 
 //catches uncaught exceptions
-process.on('uncaughtException', exitHandler);*/
+process.on('uncaughtException', exitHandler);
