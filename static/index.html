@@ -118,6 +118,9 @@
               a.remove()  //afterwards we remove the element again
               submitButton.disabled = false
               submitButton.innerHTML = "Generate PDF"
+              progress = 100
+              progressBar.innerHTML = `${progress}%`
+              progressBar.value = progress
             }
           })
           .catch(error => {

@@ -69,6 +69,14 @@ fastify.route({
       doc.pipe(
         fs.createWriteStream(path.join(__dirname, `static/${hashFilename}`))
       );
+
+      const cashFilename = path.join(__dirname, `static/${hashFilename}.json`)
+      fs.unlink(cashFilename, (err) => {
+        if (err) console.log(err);
+        else {
+          console.log("Deleted cache file: ", cashFilename)
+        }
+      });
     });
 
     reply.send({hashFilename});
@@ -91,13 +99,6 @@ fastify.route({
           console.log("Deleted pdf file: ", hashFilename);
         }
       })
-      const cashFilename = path.join(__dirname, `static/${request.params.cashFilename}.json`)
-      fs.unlink(cashFilename, (err) => {
-        if (err) console.log(err);
-        else {
-          console.log("Deleted cache file: ", cashFilename);
-        }
-      });
     }
     done();
   },
