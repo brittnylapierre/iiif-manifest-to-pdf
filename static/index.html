@@ -3,7 +3,12 @@
 
 <head>
   <title>IIIF Manifest to PDF</title>
+  <link rel="stylesheet" type="text/css" href="/static/uv/uv.css" />
   <style>
+    #app-wrap {
+      width: fit-content;
+    }
+
     .main-block {
       background: #212121;
       color: white;
@@ -21,7 +26,7 @@
       margin: 10px auto;
       border-radius: 5px;
       border: none;
-      background: #1c87c9;
+      background: #0f7ba6;
       font-size: 14px;
       font-weight: 600;
       color: #fff;
@@ -43,16 +48,48 @@
       background-color: #000000;
     }
 
-    .wrap {
+    .iiif-wrap {
       display: flex;
       flex-wrap: wrap;
     }
+
+    #progress {
+      visibility: hidden;
+    }
+
+    .uv .btn-primary {
+      color: #fff;
+      background-color: #0f7ba6 !important;
+      border-color: #0f7ba6 !important;
+    }
+
+    #error {
+      background-color: rgb(161, 10, 10);
+      padding: 10px;
+      color: white;
+      font-family: Roboto, sans-serif;
+      visibility: hidden;
+    }
   </style>
-  <link rel="stylesheet" type="text/css" href="/static/uv/uv.css" />
   <script type="text/javascript" src="/static/uv/umd/UV.js"></script>
   <script>
+    const ws = new WebSocket(`ws://${window.location.host}/errors`);
+    ws.addEventListener('message', function (event) {
+      const errorDiv = document.getElementById("error")
+      errorDiv.innerHTML = event.data;
+      errorDiv.style.visibility = "visible"
+    });
+  </script>
+  <script>
 
-    const DOWNLOAD_DELAY = 5000;
+    const DOWNLOAD_DELAY = 5000
+
+    function resetForm() {
+      let submitButton = document.getElementById("submit")
+      let progressBar = document.getElementById("progress")
+      progressBar.style.visibility = "hidden"
+      submitButton.innerHTML = "Generate PDF"
+    }
 
     function create2DArray(rangesString) {
       // 1-10, 15 -> [[0,9],[14]]
@@ -73,9 +110,31 @@
       return rangesArray
     }
 
-    function downloadFile(filename, filenameHash, submitButton) {
+    function downloadFile(filename, filenameHash) {
+
+      let submitButton = document.getElementById("submit")
+      let progressBar = document.getElementById("progress")
+      let urlInput = document.getElementById("url")
+      let filenameInput = document.getElementById("filename")
+      let canvasesInput = document.getElementById("canvases")
       let fileURL = URL
+      let progress = 0
+      progressBar.innerHTML = `${progress}%`
+      progressBar.value = progress
+      progressBar.style.visibility = "visible"
+
       let timer = setInterval(() => {
+        fetch(`/progress/${filenameHash}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.hasOwnProperty("progress")) {
+              progress = data["progress"]
+              progressBar.innerHTML = `${progress}%`
+              progressBar.value = progress
+            }
+          }).catch(e => {
+            console.log(e)
+          })
 
         fetch(`/file/${filenameHash}`)
           .then(response => {
@@ -95,7 +154,16 @@
               a.click()
               a.remove()  //afterwards we remove the element again
               submitButton.disabled = false
-              submitButton.innerHTML = "Generate PDF"
+              submitButton.innerHTML = "Finished!"
+              progress = 100
+              progressBar.innerHTML = `${progress}%`
+              progressBar.value = progress
+
+
+
+              urlInput.addEventListener("input", resetForm)
+              filenameInput.addEventListener("input", resetForm)
+              canvasesInput.addEventListener("input", resetForm)
             }
           })
           .catch(error => {
@@ -106,14 +174,17 @@
 
     function exportCanvases() {
 
+      let urlInput = document.getElementById("url")
+      let filenameInput = document.getElementById("filename")
+      let canvasesInput = document.getElementById("canvases")
       var submitButton = document.getElementById("submit")
       submitButton.disabled = true
       submitButton.innerHTML = "Please wait..."
 
       const requestData = {
-        filename: document.getElementById("filename").value,
-        url: document.getElementById("url").value,
-        canvases: JSON.stringify(create2DArray(document.getElementById("canvases").value)),
+        filename: filenameInput.value,
+        url: urlInput.value,
+        canvases: JSON.stringify(create2DArray(canvasesInput.value)),
       }
 
       // Default options are marked with *
@@ -128,7 +199,7 @@
       })
         .then(response => response.json())
         .then(responseData => {
-          downloadFile(requestData.filename, responseData.hashFilename, submitButton)
+          downloadFile(requestData.filename, responseData.hashFilename)
         });
 
     }
@@ -137,25 +208,29 @@
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="uv" id="uv"></div>
-    <div class="main-block">
-      <img src="/static/iiif.png" width="100" />
-      <h3 class="form-title">Manifest to PDF</h3>
-      <div>
-        <hr>
-        <input type="text" name="url" id="url" placeholder="Manifest url" required />
-        <!--value="https://www-demo.canadiana.ca/iiif/oocihm.84484/manifest" /-->
-        <br />
-        <input type="text" name="filename" id="filename" placeholder="PDF file name" required />
-        <!--value="oocihm.84484" /-->
-        <br />
-        <input type="text" name="canvases" id="canvases" placeholder="Canvases ex: 1-10, 15" required />
-        <!--value="1-10, 15" /-->
-        <br />
-        <hr>
-        <div class="btn-block">
-          <button class="form-button" id="submit" onclick="exportCanvases()">Generate PDF</button>
+  <div id="app-wrap">
+    <div id="error"></div>
+    <div class="iiif-wrap">
+      <div class="uv" id="uv"></div>
+      <div class="main-block">
+        <img src="/static/iiif.png" width="100" />
+        <h3 class="form-title">Manifest to PDF</h3>
+        <div>
+          <hr>
+          <input type="text" name="url" id="url" placeholder="Manifest url" required />
+          <!--value="https://www-demo.canadiana.ca/iiif/oocihm.84484/manifest" /-->
+          <br />
+          <input type="text" name="filename" id="filename" placeholder="PDF file name" required />
+          <!--value="oocihm.84484" /-->
+          <br />
+          <input type="text" name="canvases" id="canvases" placeholder="Canvases ex: 1-10, 15" required />
+          <!--value="1-10, 15" /-->
+          <br />
+          <hr>
+          <div class="btn-block">
+            <button class="form-button" id="submit" onclick="exportCanvases()">Generate PDF</button>
+          </div>
+          <progress id="progress" value="0" max="100"> 0% </progress>
         </div>
       </div>
     </div>
@@ -166,8 +241,7 @@
 
 <script>
   let uv = undefined
-  document
-    .getElementById("url")
+  document.getElementById("url")
     .addEventListener('input', e => {
       if (uv !== undefined) {
         uv.set({
