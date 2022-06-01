@@ -1,6 +1,6 @@
 Download and run on windows instructions
 
-1. Make sure you download Node.js
+1. Make sure you download Node.js: https://radixweb.com/blog/installing-npm-and-nodejs-on-windows-and-mac
 2. Click the green code button on the top right
 3. Click the download button
 4. Unzip this folder and move it to wherever you want it to be located
