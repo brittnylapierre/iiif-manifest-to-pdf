@@ -10,7 +10,6 @@
     "copy-uv-dist-umd": "cp -R node_modules/universalviewer/dist/umd ./static/uv",
     "copy-uv-html": "cp -R node_modules/universalviewer/dist/uv.html ./static/uv",
     "copy-uv-css": "cp -R node_modules/universalviewer/dist/uv.css ./static/uv",
-    "postinstall": "npm run copy",
     "start": "node index.js"
   },
   "author": "brittny lapierre",
