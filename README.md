@@ -20,7 +20,7 @@ Supports both IIIF v2 and v3 manifests.
 3. Run the server
 `npm run start`
 
-5. Navigate to http:localhost:5000
+5. Navigate to http://localhost:5000
 
 A page that lets you enter a file name, manifest url, and list of canvas ranges will show up.
 | Property | Example |
