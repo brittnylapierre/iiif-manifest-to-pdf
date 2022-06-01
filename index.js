@@ -88,7 +88,14 @@ fastify.route({
       fs.unlink(hashFilename, (err) => {
         if (err) console.log(err);
         else {
-          console.log("Deleted file: ", hashFilename);
+          console.log("Deleted pdf file: ", hashFilename);
+        }
+      })
+      const cashFilename = path.join(__dirname, `static/${request.params.cashFilename}.json`)
+      fs.unlink(cashFilename, (err) => {
+        if (err) console.log(err);
+        else {
+          console.log("Deleted cache file: ", cashFilename);
         }
       });
     }
