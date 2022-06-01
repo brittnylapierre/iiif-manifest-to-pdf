@@ -47,12 +47,16 @@
       display: flex;
       flex-wrap: wrap;
     }
+
+    #progress {
+      visibility: hidden;
+    }
   </style>
   <link rel="stylesheet" type="text/css" href="/static/uv/uv.css" />
   <script type="text/javascript" src="/static/uv/umd/UV.js"></script>
   <script>
 
-    const DOWNLOAD_DELAY = 5000;
+    const DOWNLOAD_DELAY = 5000
 
     function create2DArray(rangesString) {
       // 1-10, 15 -> [[0,9],[14]]
@@ -75,7 +79,25 @@
 
     function downloadFile(filename, filenameHash, submitButton) {
       let fileURL = URL
+      
+      let progress = 0
+      let progressBar = document.getElementById("progress")
+      progressBar.innerHTML = `${progress}%`
+      progressBar.value = progress
+      progressBar.style.visibility = "visible"
+
       let timer = setInterval(() => {
+        fetch(`/progress/${filenameHash}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.hasOwnProperty("progress")) {
+              progress = data["progress"]
+              progressBar.innerHTML = `${progress}%`
+              progressBar.value = progress
+            }
+          }).catch(e => {
+            console.log(e)
+          })
 
         fetch(`/file/${filenameHash}`)
           .then(response => {
@@ -157,6 +179,7 @@
         <div class="btn-block">
           <button class="form-button" id="submit" onclick="exportCanvases()">Generate PDF</button>
         </div>
+        <progress id="progress" value="0" max="100"> 0% </progress>
       </div>
     </div>
   </div>

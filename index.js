@@ -1,9 +1,9 @@
 import * as Fastify from "fastify";
 import * as FastifyStatic from "@fastify/static";
 import createHash from "hash-generator";
+import Cocktail from "./cocktail.js";
 import fs from "fs";
 import path from "path";
-import Cocktail from "./cocktail.js";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
@@ -63,7 +63,8 @@ fastify.route({
     const hash = createHash(16);
     const hashFilename = `${hash}${filename}.pdf`;
 
-    Cocktail(url, canvases, filename).then((doc) => {
+    Cocktail(url, canvases, filename, hashFilename)
+    .then((doc) => {
       console.log("Done request for file: ", hashFilename);
       doc.pipe(
         fs.createWriteStream(path.join(__dirname, `static/${hashFilename}`))
@@ -92,6 +93,15 @@ fastify.route({
       });
     }
     done();
+  },
+});
+
+fastify.route({
+  method: "GET",
+  url: "/progress/:hashFilename",
+  handler: async (request, reply) => {
+    const hashFilename = request.params.hashFilename
+    reply.sendFile(`./${hashFilename}.json`)
   },
 });
 
