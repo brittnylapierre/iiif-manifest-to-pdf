@@ -73,7 +73,7 @@
   </style>
   <script type="text/javascript" src="/static/uv/umd/UV.js"></script>
   <script>
-    const ws = new WebSocket(`ws://${window.location.host}/errors`);
+    const ws = new WebSocket(`wss://${window.location.host}/errors`);
     ws.addEventListener('message', function (event) {
       const errorDiv = document.getElementById("error")
       errorDiv.innerHTML = event.data;
