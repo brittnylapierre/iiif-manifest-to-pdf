@@ -70,6 +70,11 @@
       font-family: Roboto, sans-serif;
       visibility: hidden;
     }
+
+    #warning {
+      font-family: Roboto, sans-serif;
+      padding: 10px;
+    }
   </style>
   <script type="text/javascript" src="/static/uv/umd/UV.js"></script>
   <script>
@@ -209,6 +214,9 @@
 
 <body>
   <div id="app-wrap">
+    <p id="warning">
+      Please note, this demo has limited resources available to it. If your pdf file generation hangs (progress bar does not update for a while) please refresh the page and try generating a smaller file with less pages.
+    </p>
     <div id="error"></div>
     <div class="iiif-wrap">
       <div class="uv" id="uv"></div>
