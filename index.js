@@ -6,6 +6,16 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { WebSocketServer } from 'ws'
+
+const wss = new WebSocketServer({ port: 7071 });
+const clients = []
+wss.on('connection', (ws) => {
+  clients.push(ws)
+  ws.on("close", () => {
+    //clients.indexOf(ws)
+  });
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -111,7 +121,7 @@ fastify.route({
     const hashFilename = request.params.hashFilename
     reply.sendFile(`./${hashFilename}.json`)
   },
-});
+})
 
 const start = async () => {
   try {
@@ -120,5 +130,29 @@ const start = async () => {
     fastify.log.error(err);
     process.exit(1);
   }
-};
-start();
+}
+start()
+
+// Handling app out-of-memory errors
+function exitHandler(code) {
+  console.log('About to exit with code:', code)
+  for(let ws of clients) {
+    ws.send(
+      "There was a problem with the server." //Please refresh the page and try generating a smaller file.
+    )
+  }
+  process.exit(code)
+}
+
+//do something when app is closing
+process.on('exit', exitHandler)
+
+//catches ctrl+c event
+process.on('SIGINT', exitHandler);
+
+// catches "kill pid" (for example: nodemon restart)
+process.on('SIGUSR1', exitHandler);
+process.on('SIGUSR2', exitHandler);
+
+//catches uncaught exceptions
+process.on('uncaughtException', exitHandler);
