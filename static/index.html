@@ -58,6 +58,13 @@
 
     const DOWNLOAD_DELAY = 5000
 
+    function resetForm() {
+      let submitButton = document.getElementById("submit")
+      let progressBar = document.getElementById("progress")
+      progressBar.style.visibility = "hidden"
+      submitButton.innerHTML = "Generate PDF"
+    }
+
     function create2DArray(rangesString) {
       // 1-10, 15 -> [[0,9],[14]]
 
@@ -77,11 +84,15 @@
       return rangesArray
     }
 
-    function downloadFile(filename, filenameHash, submitButton) {
-      let fileURL = URL
-      
-      let progress = 0
+    function downloadFile(filename, filenameHash) {
+
+      let submitButton = document.getElementById("submit")
       let progressBar = document.getElementById("progress")
+      let urlInput = document.getElementById("url")
+      let filenameInput = document.getElementById("filename")
+      let canvasesInput = document.getElementById("canvases")
+      let fileURL = URL
+      let progress = 0
       progressBar.innerHTML = `${progress}%`
       progressBar.value = progress
       progressBar.style.visibility = "visible"
@@ -117,10 +128,16 @@
               a.click()
               a.remove()  //afterwards we remove the element again
               submitButton.disabled = false
-              submitButton.innerHTML = "Generate PDF"
+              submitButton.innerHTML = "Finished!"
               progress = 100
               progressBar.innerHTML = `${progress}%`
               progressBar.value = progress
+
+
+
+              urlInput.addEventListener("input", resetForm)
+              filenameInput.addEventListener("input", resetForm)
+              canvasesInput.addEventListener("input", resetForm)
             }
           })
           .catch(error => {
@@ -131,14 +148,17 @@
 
     function exportCanvases() {
 
+      let urlInput = document.getElementById("url")
+      let filenameInput = document.getElementById("filename")
+      let canvasesInput = document.getElementById("canvases")
       var submitButton = document.getElementById("submit")
       submitButton.disabled = true
       submitButton.innerHTML = "Please wait..."
 
       const requestData = {
-        filename: document.getElementById("filename").value,
-        url: document.getElementById("url").value,
-        canvases: JSON.stringify(create2DArray(document.getElementById("canvases").value)),
+        filename: filenameInput.value,
+        url: urlInput.value,
+        canvases: JSON.stringify(create2DArray(canvasesInput.value)),
       }
 
       // Default options are marked with *
@@ -153,7 +173,7 @@
       })
         .then(response => response.json())
         .then(responseData => {
-          downloadFile(requestData.filename, responseData.hashFilename, submitButton)
+          downloadFile(requestData.filename, responseData.hashFilename)
         });
 
     }
@@ -192,8 +212,7 @@
 
 <script>
   let uv = undefined
-  document
-    .getElementById("url")
+  document.getElementById("url")
     .addEventListener('input', e => {
       if (uv !== undefined) {
         uv.set({
