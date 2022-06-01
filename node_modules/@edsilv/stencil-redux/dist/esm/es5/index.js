@@ -1,1 +1,0 @@
-// stencilredux: ES Module
