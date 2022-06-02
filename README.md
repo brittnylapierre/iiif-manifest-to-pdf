@@ -12,6 +12,23 @@ Supports both IIIF v2 and v3 manifests.
 
 # Getting started
 
+1. Download the latest release under the 'releases' tab
+2. Extract the zip - https://github.com/brittnylapierre/iiif-manifest-to-pdf/releases/tag/v0.0.1
+3. Click on the executable in the extracted zip folder (iiif-manifest-to-pdf)
+4. Do a 'run anyways' on a security warning that will popup
+5. Remember to add the .pdf to the name you choose to save as (haven't been able to figure out how to make this more convenient yet)
+
+When you run the app, a page that lets you enter a file name, manifest url, and list of canvas ranges will show up.
+| Property | Example |
+|-------------------|-------------------------------------------------------------------------------------------|
+| Filename | my-manifest |
+| Manifest url | https://www-demo.canadiana.ca/iiif/oocihm.65600/manifest |
+| Canvases | 1-10, 15, 20-25 (This will take pages 1 to 10, 15, and 20 to 25 from your manifest and add them to your pdf.) |
+
+A pdf will automatically download after the server gets the manifest json and compiles the pdf with the canvas images.
+
+# Development
+
 1. Clone the repo
 
 2. Install dependancies
@@ -20,13 +37,4 @@ Supports both IIIF v2 and v3 manifests.
 3. Run the server
 `npm run start`
 
-5. Navigate to http://localhost:5000
-
-A page that lets you enter a file name, manifest url, and list of canvas ranges will show up.
-| Property | Example |
-|-------------------|-------------------------------------------------------------------------------------------|
-| Filename | my-manifest |
-| Manifest url | https://www-demo.canadiana.ca/iiif/oocihm.65600/manifest |
-| Canvases | 1-10, 15, 20-25 (This will take pages 1 to 10, 15, and 20 to 25 from your manifest and add them to your pdf.) |
-
-A pdf will automatically download after the server gets the manifest json and compiles the pdf with the canvas images.
+5. Electron will open with the app loaded
