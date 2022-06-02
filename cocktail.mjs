@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 import PDFDocument from "./pdfWrap.cjs";
-import cache from "./cache.js";
+import cache from "./cache.mjs";
 
 // See https://github.com/vanda/cocktail
 function v2Extract(manifest) {

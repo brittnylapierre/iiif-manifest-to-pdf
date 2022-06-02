@@ -3,7 +3,8 @@
 
 <head>
   <title>IIIF Manifest to PDF</title>
-  <link rel="stylesheet" type="text/css" href="/static/uv/uv.css" />
+  <link rel="stylesheet" type="text/css" href="./uv/uv.css" />
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
   <style>
     #app-wrap {
       width: fit-content;
@@ -71,16 +72,10 @@
       visibility: hidden;
     }
   </style>
-  <script type="text/javascript" src="/static/uv/umd/UV.js"></script>
+  <script type="text/javascript" src="./uv/umd/UV.js"></script>
+
   <script>
-    const ws = new WebSocket('ws://localhost:7071/ws');
-    ws.addEventListener('message', function (event) {
-      const errorDiv = document.getElementById("error")
-      errorDiv.innerHTML = event.data;
-      errorDiv.style.visibility = "visible"
-    });
-  </script>
-  <script>
+    const { ipcRenderer } = require('electron')
 
     const DOWNLOAD_DELAY = 5000
 
@@ -110,33 +105,74 @@
       return rangesArray
     }
 
-    function downloadFile(filename, filenameHash) {
 
+    function downloadFile(filename, filenameHash) {
       let submitButton = document.getElementById("submit")
       let progressBar = document.getElementById("progress")
+      console.log("progressBar", progressBar)
       let urlInput = document.getElementById("url")
       let filenameInput = document.getElementById("filename")
       let canvasesInput = document.getElementById("canvases")
-      let fileURL = URL
       let progress = 0
       progressBar.innerHTML = `${progress}%`
       progressBar.value = progress
       progressBar.style.visibility = "visible"
 
-      let timer = setInterval(() => {
-        fetch(`/progress/${filenameHash}`)
-          .then(response => response.json())
-          .then(data => {
-            if (data.hasOwnProperty("progress")) {
-              progress = data["progress"]
-              progressBar.innerHTML = `${progress}%`
-              progressBar.value = progress
-            }
-          }).catch(e => {
-            console.log(e)
-          })
+      try {
+        urlInput.removeEventListener("input", resetForm)
+        filenameInput.removeEventListener("input", resetForm)
+        canvasesInput.removeEventListener("input", resetForm)
+      } catch (e) {
+        console.log(e)
+      }
 
-        fetch(`/file/${filenameHash}`)
+      let timer = setInterval(() => {
+
+        try {
+          const progressData = JSON.parse(
+            ipcRenderer.sendSync('app:progress', filenameHash)
+          )
+          if (progressData.hasOwnProperty("progress")) {
+            progress = progressData["progress"]
+            progressBar.innerHTML = `${progress}%`
+            progressBar.value = progress
+          }
+          console.log("progressData", progressData, typeof progressData)
+        } catch (e) {
+          console.log(e)
+        }
+
+        try {
+          let pdf = ipcRenderer.sendSync('app:pdf', filenameHash)
+          if (pdf) {
+            clearInterval(timer)
+            const clearRes = ipcRenderer.sendSync('app:clear', filenameHash)
+            console.log("clearRes", clearRes, typeof clearRes)
+
+            // convert base64 to raw binary data held in a string
+            pdf = `data:application/pdf;base64,${pdf}`
+            var a = document.createElement('a')
+            a.href = pdf
+            a.download = `${filename}.pdf`
+            document.body.appendChild(a) // we need to append the element to the dom -> otherwise it will not work in firefox
+            a.click()
+            a.remove()  //afterwards we remove the element again
+            submitButton.disabled = false
+            submitButton.innerHTML = "Finished!"
+            progress = 100
+            progressBar.innerHTML = `${progress}%`
+            progressBar.value = progress
+
+            urlInput.addEventListener("input", resetForm)
+            filenameInput.addEventListener("input", resetForm)
+            canvasesInput.addEventListener("input", resetForm)
+
+          }
+        } catch (e) {
+          console.log(e)
+        }
+
+        /*fetch(`/file/${filenameHash}`)
           .then(response => {
             if (response.ok) {
               return response.blob()
@@ -168,11 +204,11 @@
           })
           .catch(error => {
             console.error('There was an error!', error);
-          })
+          })*/
       }, DOWNLOAD_DELAY)
     }
 
-    function exportCanvases() {
+    function generate() {
 
       let urlInput = document.getElementById("url")
       let filenameInput = document.getElementById("filename")
@@ -187,21 +223,9 @@
         canvases: JSON.stringify(create2DArray(canvasesInput.value)),
       }
 
-      // Default options are marked with *
-      const response = fetch("/", {
-        method: 'POST', // *GET, POST, PUT, DELETE, etc.
-        headers: {
-          'Content-Type': 'application/json' // must be json
-        },
-        redirect: 'follow',
-        body: JSON.stringify(requestData),
-        timeout: 8000000
-      })
-        .then(response => response.json())
-        .then(responseData => {
-          downloadFile(requestData.filename, responseData.hashFilename)
-        });
-
+      const filenameHash = ipcRenderer.sendSync('app:generate', requestData)
+      console.log("filenameHash", filenameHash)
+      if (filenameHash) downloadFile(requestData.filename, filenameHash)
     }
 
   </script>
@@ -213,7 +237,7 @@
     <div class="iiif-wrap">
       <div class="uv" id="uv"></div>
       <div class="main-block">
-        <img src="/static/iiif.png" width="100" />
+        <img src="./iiif.png" width="100" />
         <h3 class="form-title">Manifest to PDF</h3>
         <div>
           <hr>
@@ -228,7 +252,7 @@
           <br />
           <hr>
           <div class="btn-block">
-            <button class="form-button" id="submit" onclick="exportCanvases()">Generate PDF</button>
+            <button class="form-button" id="submit" onclick="generate()">Generate PDF</button>
           </div>
           <progress id="progress" value="0" max="100"> 0% </progress>
         </div>
@@ -273,35 +297,6 @@
         })
       }
     })
-  /*var urlAdaptor = new UV.IIIFURLAdaptor();
-
-  const data = urlAdaptor.getInitialData({
-    manifest: "https://iiif.io/api/cookbook/recipe/0001-mvm-image/manifest.json",
-    embedded: true // needed for codesandbox frame
-  });
-
-  uv = UV.init("uv", data);
-  urlAdaptor.bindTo(uv);
-
-  // override config using an inline json object
-  uv.on("configure", function ({ config, cb }) {
-    cb({
-      options: { footerPanelEnabled: false }
-    });
-  });
-
-    // this is loading an complete config file for reference
-    // to increase loading speed, just use the specific settings you require
-    // uv.on("configure", function ({ config, cb }) {
-    //   cb(
-    //     new Promise(function (resolve) {
-    //       fetch("uv-config.json").then(function (response) {
-    //         resolve(response.json());
-    //       });
-    //     })
-    //   );
-    // });
-    */
 </script>
 
 </html>
