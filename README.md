@@ -18,6 +18,11 @@ Supports both IIIF v2 and v3 manifests.
 4. Do a 'run anyways' on a security warning that will popup
 5. Remember to add the .pdf to the name you choose to save as (haven't been able to figure out how to make this more convenient yet)
 
+This is the executable:
+
+<img width="644" alt="Screenshot 2022-06-02 181220" src="https://user-images.githubusercontent.com/10541019/171748034-50dde454-09e9-44b7-bcd2-63663ae2dd7f.png">
+
+
 When you run the app, a page that lets you enter a file name, manifest url, and list of canvas ranges will show up.
 | Property | Example |
 |-------------------|-------------------------------------------------------------------------------------------|
