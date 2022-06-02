@@ -12,8 +12,8 @@ Supports both IIIF v2 and v3 manifests.
 
 # Getting started
 
-1. Download the latest release under the 'releases' tab
-2. Extract the zip - https://github.com/brittnylapierre/iiif-manifest-to-pdf/releases/tag/v0.0.1
+1. Download the latest release under the 'releases' tab - https://github.com/brittnylapierre/iiif-manifest-to-pdf/releases/tag/v0.0.1
+2. Extract the zip
 3. Click on the executable in the extracted zip folder (iiif-manifest-to-pdf)
 4. Do a 'run anyways' on a security warning that will popup
 5. Remember to add the .pdf to the name you choose to save as (haven't been able to figure out how to make this more convenient yet)
