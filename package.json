@@ -11,7 +11,7 @@
     "copy-uv-html": "cp -R node_modules/universalviewer/dist/uv.html ./static/uv",
     "copy-uv-css": "cp -R node_modules/universalviewer/dist/uv.css ./static/uv",
     "postinstall": "npm run copy",
-    "start": "node index.js"
+    "start": "node index.js --max-old-space-size=8192"
   },
   "author": "brittny lapierre",
   "license": "ISC",

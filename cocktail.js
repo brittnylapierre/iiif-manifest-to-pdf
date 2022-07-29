@@ -148,7 +148,7 @@ async function generatePDF(
       )}`;
       doc
         .text("Label: " + imageData.imageLabel, 15, 15)
-        .image(currentURI, 15, 30, { width: 500 });
+        .image(currentURI, 15, 30, {fit: [600, 700], align: 'center', valign: 'center'})
     } catch (e) {
       console.log("Error on: ", imageData);
       console.log(e);

@@ -77,10 +77,14 @@
       padding: 10px;
       max-width: 1100px;
     }
+
+    #downloadbtn {
+      visibility: hidden;
+    }
   </style>
   <script type="text/javascript" src="/static/uv/umd/UV.js"></script>
   <script>
-    const ws = new WebSocket(`wss://${window.location.host}/errors`);
+    const ws = new WebSocket(`ws://${window.location.host}/errors`);
     ws.addEventListener('message', function (event) {
       const errorDiv = document.getElementById("error")
       errorDiv.innerHTML = event.data;
@@ -88,7 +92,7 @@
     });
   </script>
   <script>
-
+    let BLOB, FILENAME;
     const DOWNLOAD_DELAY = 5000
 
     function resetForm() {
@@ -96,6 +100,11 @@
       let progressBar = document.getElementById("progress")
       progressBar.style.visibility = "hidden"
       submitButton.innerHTML = "Generate PDF"
+      let downloadbtn = document.getElementById("downloadbtn")
+      downloadbtn.style.visibility = "hidden"
+      downloadbtn.innerHTML = "Download PDF"
+      BLOB = ""
+      FILENAME = ""
     }
 
     function create2DArray(rangesString) {
@@ -117,14 +126,28 @@
       return rangesArray
     }
 
-    function downloadFile(filename, filenameHash) {
+    function download() {
+	      let downloadbtn = document.getElementById("downloadbtn")
+              downloadbtn.innerHTML = "Downloading..."
+              let fileURL = URL
+              var url = fileURL.createObjectURL(BLOB)
+              var a = document.createElement('a')
+              a.href = url
+              a.download = `${FILENAME}.pdf`
+              document.body.appendChild(a) // we need to append the element to the dom -> otherwise it will not work in firefox
+              a.click()
+              a.remove()  //afterwards we remove the element again
+              downloadbtn.innerHTML = "Download Again"
+    }
+
+    function setBlob(filename, filenameHash) {
 
       let submitButton = document.getElementById("submit")
       let progressBar = document.getElementById("progress")
       let urlInput = document.getElementById("url")
       let filenameInput = document.getElementById("filename")
       let canvasesInput = document.getElementById("canvases")
-      let fileURL = URL
+ 
       let progress = 0
       progressBar.innerHTML = `${progress}%`
       progressBar.value = progress
@@ -153,21 +176,15 @@
           .then(blob => {
             if (blob) {
               clearInterval(timer)
-              var url = fileURL.createObjectURL(blob)
-              var a = document.createElement('a')
-              a.href = url
-              a.download = `${filename}.pdf`
-              document.body.appendChild(a) // we need to append the element to the dom -> otherwise it will not work in firefox
-              a.click()
-              a.remove()  //afterwards we remove the element again
+              BLOB = blob
+              FILENAME = filename
               submitButton.disabled = false
               submitButton.innerHTML = "Finished!"
               progress = 100
               progressBar.innerHTML = `${progress}%`
               progressBar.value = progress
-
-
-
+              let downloadbtn = document.getElementById("downloadbtn")
+              downloadbtn.style.visibility = "visible"
               urlInput.addEventListener("input", resetForm)
               filenameInput.addEventListener("input", resetForm)
               canvasesInput.addEventListener("input", resetForm)
@@ -206,7 +223,7 @@
       })
         .then(response => response.json())
         .then(responseData => {
-          downloadFile(requestData.filename, responseData.hashFilename)
+          setBlob(requestData.filename, responseData.hashFilename)
         });
 
     }
@@ -241,6 +258,8 @@
             <button class="form-button" id="submit" onclick="exportCanvases()">Generate PDF</button>
           </div>
           <progress id="progress" value="0" max="100"> 0% </progress>
+	  <div class="btn-block">
+            <button class="form-button" id="downloadbtn" onclick="download()">Download PDF</button>
         </div>
       </div>
     </div>
