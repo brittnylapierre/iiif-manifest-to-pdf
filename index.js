@@ -90,7 +90,7 @@ fastify.route({
   url: "/file/:hashFilename",
   handler: async (request, reply) => {
     const hashFilename = request.params.hashFilename
-    reply.sendFile(`./${hashFilename}`)
+    reply.sendFile(`${hashFilename}`)
   },
   onResponse: (request, reply, done) => {
     if (reply.statusCode === 200) {
@@ -111,7 +111,7 @@ fastify.route({
   url: "/progress/:hashFilename",
   handler: async (request, reply) => {
     const hashFilename = request.params.hashFilename
-    reply.sendFile(`./${hashFilename}.json`)
+    reply.sendFile(`${hashFilename}.json`)
   },
 })
 
