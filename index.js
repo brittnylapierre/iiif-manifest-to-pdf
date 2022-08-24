@@ -56,14 +56,14 @@ fastify.route({
     },
   },
   handler: async (request, reply) => {
-    const url = request.body.url;
-    const filename = request.body.filename;
+    const url = request.body.url
+    const filename = request.body.filename?.replace('/', '-').replace('\', '-')
     const canvases = Array.isArray(request.body.canvases)
       ? request.body.canvases
       : JSON.parse(request.body.canvases);
 
     const hash = createHash(16);
-    const hashFilename = `${hash}${filename?.replace('/', '-').replace('\', '-')}.pdf`;
+    const hashFilename = `${hash}${filename}.pdf`;
 
     Cocktail(url, canvases, filename, hashFilename)
     .then((doc) => {
