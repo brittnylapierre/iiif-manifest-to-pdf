@@ -57,13 +57,13 @@ fastify.route({
   },
   handler: async (request, reply) => {
     const url = request.body.url
-    const filename = decodeURI(request.body.filename).replace(/(\/|\\)/g, '-')
+    const filename = request.body.filename?.replace(/(\/|\\)/g, '-')
     const canvases = Array.isArray(request.body.canvases)
       ? request.body.canvases
       : JSON.parse(request.body.canvases);
 
     const hash = createHash(16);
-    const hashFilename = `${hash}${filename}.pdf`;
+    const hashFilename = `${hash}.pdf`;
 
     Cocktail(url, canvases, filename, hashFilename)
     .then((doc) => {
@@ -89,12 +89,12 @@ fastify.route({
   method: "GET",
   url: "/file/:hashFilename",
   handler: async (request, reply) => {
-    const hashFilename = decodeURI(request.params.hashFilename).replace(/(\/|\\)/g, '-')
+    const hashFilename = request.params.hashFilename
     reply.sendFile(`./${hashFilename}`)
   },
   onResponse: (request, reply, done) => {
     if (reply.statusCode === 200) {
-      const hashFilename = path.join(__dirname, `static/${decodeURI(request.params.hashFilename).replace(/(\/|\\)/g, '-')}`)
+      const hashFilename = path.join(__dirname, `static/${request.params.hashFilename`)
       fs.unlink(hashFilename, (err) => {
         if (err) console.log(err);
         else {
@@ -110,7 +110,7 @@ fastify.route({
   method: "GET",
   url: "/progress/:hashFilename",
   handler: async (request, reply) => {
-    const hashFilename = decodeURI(request.params.hashFilename).replace(/(\/|\\)/g, '-')
+    const hashFilename = request.params.hashFilename
     reply.sendFile(`./${hashFilename}.json`)
   },
 })
