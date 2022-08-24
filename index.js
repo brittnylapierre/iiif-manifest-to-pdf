@@ -57,7 +57,7 @@ fastify.route({
   },
   handler: async (request, reply) => {
     const url = request.body.url
-    const filename = request.body.filename?.replace('/', '-').replace('\', '-')
+    const filename = request.body.filename?.replace(/(\/|\\)/g, '-')
     const canvases = Array.isArray(request.body.canvases)
       ? request.body.canvases
       : JSON.parse(request.body.canvases);
@@ -89,12 +89,12 @@ fastify.route({
   method: "GET",
   url: "/file/:hashFilename",
   handler: async (request, reply) => {
-    const hashFilename = request.params.hashFilename?.replace('/', '-').replace('\', '-')
+    const hashFilename = request.params.hashFilename?.replace(/(\/|\\)/g, '-')
     reply.sendFile(`./${hashFilename}`)
   },
   onResponse: (request, reply, done) => {
     if (reply.statusCode === 200) {
-      const hashFilename = path.join(__dirname, `static/${request.params.hashFilename?.replace('/', '-').replace('\', '-')}`)
+      const hashFilename = path.join(__dirname, `static/${request.params.hashFilename?.replace(/(\/|\\)/g, '-')}`)
       fs.unlink(hashFilename, (err) => {
         if (err) console.log(err);
         else {
@@ -110,7 +110,7 @@ fastify.route({
   method: "GET",
   url: "/progress/:hashFilename",
   handler: async (request, reply) => {
-    const hashFilename = request.params.hashFilename?.replace('/', '-').replace('\', '-')
+    const hashFilename = request.params.hashFilename?.replace(/(\/|\\)/g, '-')
     reply.sendFile(`./${hashFilename}.json`)
   },
 })
