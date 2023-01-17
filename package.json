@@ -1,0 +1,36 @@
+{
+  "name": "iiif-manifest-to-pdf",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "an api that will convert an iiif manifest to a pdf",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"todo\"",
+    "copy": "npm run copy-uv-dist-umd && npm run copy-uv-html && npm run copy-uv-css",
+    "copy-uv-dist-umd": "cp -R node_modules/universalviewer/dist/umd ./static/uv",
+    "copy-uv-html": "cp -R node_modules/universalviewer/dist/uv.html ./static/uv",
+    "copy-uv-css": "cp -R node_modules/universalviewer/dist/uv.css ./static/uv",
+    "postinstall": "npm run copy",
+    "start": "ts-node-esm index.js --max-old-space-size=8192"
+  },
+  "compilerOptions": {
+    "esModuleInterop": true
+  },
+  "author": "brittny lapierre",
+  "license": "ISC",
+  "dependencies": {
+    "@fastify/static": "^5.0.2",
+    "@fastify/websocket": "^5.0.0",
+    "blob-stream": "^0.1.3",
+    "esm": "^3.2.25",
+    "fastify": "^3.29.0",
+    "get-stream": "^6.0.1",
+    "hash-generator": "^0.1.0",
+    "node-fetch": "^3.2.4",
+    "pdfkit": "^0.13.0",
+    "pdfmake": "^0.2.5",
+    "universalviewer": "^4.0.0-pre.108",
+    "websocket": "^1.0.34",
+    "ws": "^8.7.0"
+  }
+}

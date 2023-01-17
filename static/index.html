@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>IIIF Manifest to PDF</title>
+  <link rel="stylesheet" type="text/css" href="/static/uv/uv.css" />
+  <style>
+    #app-wrap {
+      width: fit-content;
+    }
+
+    .main-block {
+      background: #212121;
+      color: white;
+      font-family: Roboto, sans-serif;
+      padding: 25px;
+    }
+
+    .form-title {
+      font-weight: 400;
+    }
+
+    .form-button {
+      width: 90%;
+      padding: 10px 0;
+      margin: 10px auto;
+      border-radius: 5px;
+      border: none;
+      background: #0f7ba6;
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .form-button:hover {
+      background: #26a9e0;
+    }
+
+    .form-button:disabled {
+      pointer-events: none;
+      cursor: progress;
+      background: grey;
+    }
+
+    #uv {
+      width: 924px;
+      height: 668px;
+      background-color: #000000;
+    }
+
+    .iiif-wrap {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    #progress {
+      visibility: hidden;
+    }
+
+    .uv .btn-primary {
+      color: #fff;
+      background-color: #0f7ba6 !important;
+      border-color: #0f7ba6 !important;
+    }
+
+    #error {
+      background-color: rgb(161, 10, 10);
+      padding: 10px;
+      color: white;
+      font-family: Roboto, sans-serif;
+      visibility: hidden;
+      max-width: 1100px;
+    }
+
+    #warning {
+      font-family: Roboto, sans-serif;
+      padding: 10px;
+      max-width: 1100px;
+    }
+
+    #downloadbtn {
+      visibility: hidden;
+    }
+  </style>
+  <script type="text/javascript" src="/static/uv/umd/UV.js"></script>
+  <script>
+    const ws = new WebSocket(`ws://${window.location.host}/errors`);
+    ws.addEventListener('message', function (event) {
+      const errorDiv = document.getElementById("error")
+      errorDiv.innerHTML = event.data;
+      errorDiv.style.visibility = "visible"
+    });
+  </script>
+  <script>
+    let BLOB, FILENAME;
+    const DOWNLOAD_DELAY = 5000
+
+    function resetForm() {
+      let submitButton = document.getElementById("submit")
+      let progressBar = document.getElementById("progress")
+      progressBar.style.visibility = "hidden"
+      submitButton.innerHTML = "Generate PDF"
+      let downloadbtn = document.getElementById("downloadbtn")
+      downloadbtn.style.visibility = "hidden"
+      downloadbtn.innerHTML = "Download PDF"
+      BLOB = ""
+      FILENAME = ""
+    }
+
+    function create2DArray(rangesString) {
+      // 1-10, 15 -> [[0,9],[14]]
+
+      // Remove whitespace
+      rangesString = rangesString.replace(/^\s+|\s+$/gm, '')
+
+      // Extract ranges
+      const rangeStringArray = rangesString.split(',')
+
+      let rangesArray = []
+      for (let rangeString of rangeStringArray) {
+        const pageRangeArray = rangeString.split("-")
+        let indexRangeArray = []
+        for (let pageNumber of pageRangeArray) indexRangeArray.push(parseInt(pageNumber) - 1)
+        rangesArray.push(indexRangeArray)
+      }
+      return rangesArray
+    }
+
+    function download() {
+	      let downloadbtn = document.getElementById("downloadbtn")
+              downloadbtn.innerHTML = "Downloading..."
+              let fileURL = URL
+              var url = fileURL.createObjectURL(BLOB)
+              var a = document.createElement('a')
+              a.href = url
+              a.download = `${FILENAME}.pdf`
+              document.body.appendChild(a) // we need to append the element to the dom -> otherwise it will not work in firefox
+              a.click()
+              a.remove()  //afterwards we remove the element again
+              downloadbtn.innerHTML = "Download Again"
+    }
+
+    function setBlob(filename, filenameHash) {
+
+      let submitButton = document.getElementById("submit")
+      let progressBar = document.getElementById("progress")
+      let urlInput = document.getElementById("url")
+      let filenameInput = document.getElementById("filename")
+      let canvasesInput = document.getElementById("canvases")
+ 
+      let progress = 0
+      progressBar.innerHTML = `${progress}%`
+      progressBar.value = progress
+      progressBar.style.visibility = "visible"
+
+      let timer = setInterval(() => {
+        fetch(`/progress/${filenameHash}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.hasOwnProperty("progress")) {
+              progress = data["progress"]
+              progressBar.innerHTML = `${progress}%`
+              progressBar.value = progress
+            }
+          }).catch(e => {
+            console.log(e)
+          })
+        
+        if(progress === 100){
+          fetch(`/file/${filenameHash}`)
+            .then(response => {
+              if (response.ok) {
+                return response.blob()
+              } return new Promise((resolve, reject) => { resolve(null) })
+            }
+            )
+            .then(blob => {
+              if (blob) {
+                clearInterval(timer)
+                BLOB = blob
+                FILENAME = filename
+                submitButton.disabled = false
+                submitButton.innerHTML = "Finished!"
+                progress = 100
+                progressBar.innerHTML = `${progress}%`
+                progressBar.value = progress
+                let downloadbtn = document.getElementById("downloadbtn")
+                downloadbtn.style.visibility = "visible"
+                urlInput.addEventListener("input", resetForm)
+                filenameInput.addEventListener("input", resetForm)
+                canvasesInput.addEventListener("input", resetForm)
+              }
+            })
+            .catch(error => {
+              console.error('There was an error!', error);
+            })
+        }
+      }, DOWNLOAD_DELAY)
+    }
+
+    function exportCanvases() {
+
+      let urlInput = document.getElementById("url")
+      let filenameInput = document.getElementById("filename")
+      let canvasesInput = document.getElementById("canvases")
+      var submitButton = document.getElementById("submit")
+      submitButton.disabled = true
+      submitButton.innerHTML = "Please wait..."
+
+      const requestData = {
+        filename: filenameInput.value,
+        url: urlInput.value,
+        canvases: JSON.stringify(create2DArray(canvasesInput.value)),
+      }
+
+      // Default options are marked with *
+      const response = fetch("/", {
+        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        headers: {
+          'Content-Type': 'application/json' // must be json
+        },
+        redirect: 'follow',
+        body: JSON.stringify(requestData),
+        timeout: 8000000
+      })
+        .then(response => response.json())
+        .then(responseData => {
+          setBlob(requestData.filename, responseData.hashFilename)
+        });
+
+    }
+
+  </script>
+</head>
+
+<body>
+  <div id="app-wrap">
+    <p id="warning">
+      Please note, this demo has limited resources available to it. If your pdf file generation hangs (progress bar does not update for a while) please refresh the page and try generating a smaller file with less pages.
+    </p>
+    <div id="error"></div>
+    <div class="iiif-wrap">
+      <div class="uv" id="uv"></div>
+      <div class="main-block">
+        <img src="/static/iiif.png" width="100" />
+        <h3 class="form-title">Manifest to PDF</h3>
+        <div>
+          <hr>
+          <input type="text" name="url" id="url" placeholder="Manifest url" required value="https://heritage.canadiana.ca/iiif/oocihm.lac_reel_h1664/manifest"/>
+          <!--value="https://www-demo.canadiana.ca/iiif/oocihm.84484/manifest" /-->
+          <br />
+          <input type="text" name="filename" id="filename" placeholder="PDF file name" required value="test"/>
+          <!--value="oocihm.84484" /-->
+          <br />
+          <input type="text" name="canvases" id="canvases" placeholder="Canvases ex: 1-10, 15" required value="1-833"/>
+          <!--value="1-10, 15" /-->
+          <br />
+          <hr>
+          <div class="btn-block">
+            <button class="form-button" id="submit" onclick="exportCanvases()">Generate PDF</button>
+          </div>
+          <progress id="progress" value="0" max="100"> 0% </progress>
+	  <div class="btn-block">
+            <button class="form-button" id="downloadbtn" onclick="download()">Download PDF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+
+
+<script>
+  let uv = undefined
+  document.getElementById("url")
+    .addEventListener('input', e => {
+      if (uv !== undefined) {
+        uv.set({
+          iiifManifestId: e.target.value,
+          canvasIndex: 0,
+        })
+      } else {
+        const data = {
+          manifest: e.target.value,
+          embedded: true // needed for codesandbox frame
+        }
+        uv = UV.init("uv", data)
+
+        // override config using an inline json object
+        uv.on("configure", function ({ config, cb }) {
+          cb({
+            options: {
+              useArrowKeysToNavigate: true,
+              preserveViewport: true,
+            },
+            modules: {
+              downloadDialogue: {
+                options: {
+                  optionsExplanatoryTextEnabled: true,
+                }
+              }
+            }
+          })
+        })
+      }
+    })
+  /*var urlAdaptor = new UV.IIIFURLAdaptor();
+
+  const data = urlAdaptor.getInitialData({
+    manifest: "https://iiif.io/api/cookbook/recipe/0001-mvm-image/manifest.json",
+    embedded: true // needed for codesandbox frame
+  });
+
+  uv = UV.init("uv", data);
+  urlAdaptor.bindTo(uv);
+
+  // override config using an inline json object
+  uv.on("configure", function ({ config, cb }) {
+    cb({
+      options: { footerPanelEnabled: false }
+    });
+  });
+
+    // this is loading an complete config file for reference
+    // to increase loading speed, just use the specific settings you require
+    // uv.on("configure", function ({ config, cb }) {
+    //   cb(
+    //     new Promise(function (resolve) {
+    //       fetch("uv-config.json").then(function (response) {
+    //         resolve(response.json());
+    //       });
+    //     })
+    //   );
+    // });
+    */
+</script>
+
+</html>

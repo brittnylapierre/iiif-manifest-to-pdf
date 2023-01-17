@@ -1,0 +1,1 @@
+{"version":3,"file":"licenses.d.ts","sourceRoot":"","sources":["../../../src/res/licenses.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,kBAAkB;IACjC,IAAI,EAAE,MAAM,CAAC;IACb,IAAI,EAAE,MAAM,CAAC;CACd;AACD,MAAM,MAAM,WAAW,GAAG,MAAM,CAAC,MAAM,EAAE,kBAAkB,CAAC,CAAC;AAI7D,eAAO,MAAM,QAAQ,EAAE,WAqPtB,CAAC;AAEF,wBAAgB,cAAc,CAAC,GAAG,EAAE,MAAM,GAAG,kBAAkB,GAAG,IAAI,CAMrE"}
