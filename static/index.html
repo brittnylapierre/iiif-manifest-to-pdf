@@ -165,34 +165,36 @@
           }).catch(e => {
             console.log(e)
           })
-
-        fetch(`/file/${filenameHash}`)
-          .then(response => {
-            if (response.ok) {
-              return response.blob()
-            } return new Promise((resolve, reject) => { resolve(null) })
-          }
-          )
-          .then(blob => {
-            if (blob) {
-              clearInterval(timer)
-              BLOB = blob
-              FILENAME = filename
-              submitButton.disabled = false
-              submitButton.innerHTML = "Finished!"
-              progress = 100
-              progressBar.innerHTML = `${progress}%`
-              progressBar.value = progress
-              let downloadbtn = document.getElementById("downloadbtn")
-              downloadbtn.style.visibility = "visible"
-              urlInput.addEventListener("input", resetForm)
-              filenameInput.addEventListener("input", resetForm)
-              canvasesInput.addEventListener("input", resetForm)
+        
+        if(progress === 100){
+          fetch(`/file/${filenameHash}`)
+            .then(response => {
+              if (response.ok) {
+                return response.blob()
+              } return new Promise((resolve, reject) => { resolve(null) })
             }
-          })
-          .catch(error => {
-            console.error('There was an error!', error);
-          })
+            )
+            .then(blob => {
+              if (blob) {
+                clearInterval(timer)
+                BLOB = blob
+                FILENAME = filename
+                submitButton.disabled = false
+                submitButton.innerHTML = "Finished!"
+                progress = 100
+                progressBar.innerHTML = `${progress}%`
+                progressBar.value = progress
+                let downloadbtn = document.getElementById("downloadbtn")
+                downloadbtn.style.visibility = "visible"
+                urlInput.addEventListener("input", resetForm)
+                filenameInput.addEventListener("input", resetForm)
+                canvasesInput.addEventListener("input", resetForm)
+              }
+            })
+            .catch(error => {
+              console.error('There was an error!', error);
+            })
+        }
       }, DOWNLOAD_DELAY)
     }
 
@@ -244,13 +246,13 @@
         <h3 class="form-title">Manifest to PDF</h3>
         <div>
           <hr>
-          <input type="text" name="url" id="url" placeholder="Manifest url" required />
+          <input type="text" name="url" id="url" placeholder="Manifest url" required value="https://heritage.canadiana.ca/iiif/oocihm.lac_reel_h1664/manifest"/>
           <!--value="https://www-demo.canadiana.ca/iiif/oocihm.84484/manifest" /-->
           <br />
-          <input type="text" name="filename" id="filename" placeholder="PDF file name" required />
+          <input type="text" name="filename" id="filename" placeholder="PDF file name" required value="test"/>
           <!--value="oocihm.84484" /-->
           <br />
-          <input type="text" name="canvases" id="canvases" placeholder="Canvases ex: 1-10, 15" required />
+          <input type="text" name="canvases" id="canvases" placeholder="Canvases ex: 1-10, 15" required value="1-833"/>
           <!--value="1-10, 15" /-->
           <br />
           <hr>

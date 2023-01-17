@@ -2,7 +2,7 @@ import * as Fastify from "fastify";
 import * as FastifyStatic from "@fastify/static";
 import * as FastifyWS from "@fastify/websocket";
 import createHash from "hash-generator";
-import Cocktail from "./cocktail.js";
+import MakePDF from "./makePDF.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -65,22 +65,10 @@ fastify.route({
     const hash = createHash(16);
     const hashFilename = `${hash}.pdf`;
 
-    Cocktail(url, canvases, filename, hashFilename)
-    .then((doc) => {
-      console.log("Done request for file: ", hashFilename);
-      doc.pipe(
-        fs.createWriteStream(path.join(__dirname, `static/${hashFilename}`))
-      );
-
-      const cashFilename = path.join(__dirname, `static/${hashFilename}.json`)
-      fs.unlink(cashFilename, (err) => {
-        if (err) console.log(err);
-        else {
-          console.log("Deleted cache file: ", cashFilename)
-        }
-      });
+    MakePDF(url, canvases, filename, hashFilename)
+    .then((res) => {
+      console.log("Done request for file: ", hashFilename, res);
     });
-
     reply.send({hashFilename});
   },
 });
